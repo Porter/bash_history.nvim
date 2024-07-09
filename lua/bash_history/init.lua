@@ -4,6 +4,7 @@ M.setup = function(opts)
   local opts = opts or {}
   M.histfile = opts.histfile or "$HOME/.bash_history"
   M.pastCommandsCount = opts.pastCommandsCount or 100
+  M.filter = opts.filter or function(line) return true end
   return M
 end
 
@@ -19,8 +20,12 @@ M.popup = function(cb)
   local result = handle:read("*a")
   handle:close()
 
-  results = vim.split(result, "\n")
-  results = vim.tbl_filter(function(f) return f ~= "" end, results)
+  local results = vim.split(result, "\n")
+  if #results ~= 0 and results[#results] == "" then
+    table.remove(results, #results)
+  end
+
+  results = vim.tbl_filter(M.filter, results)
 
   local width = .95
   local height = 10
